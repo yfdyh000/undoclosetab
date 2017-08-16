@@ -19,10 +19,25 @@
 
 // Function to do all this "Promise" stuff required by the WebExtensions API.
 // Will finally call the supplied callback with a list of closed tabs.
+
+function getCurrentNumberOption() {
+  browser.storage.local.get("showNumber").then(options => {
+    let num = parseInt(options.showNumber);
+    if (num > 0)
+      return num;
+  }, error => {
+    //console.warn(error) // unset or error
+    return 6;
+  });
+}
+
+
 async function GetLastClosedTabs() {
   try {
     const currentWindow = await browser.windows.getCurrent();
-    const sessions = await browser.sessions.getRecentlyClosed();
+    const sessions = await browser.sessions.getRecentlyClosed({
+      maxResults: getCurrentNumberOption()
+    });
     let tabs = sessions.filter((s) => (s.tab && s.tab.windowId === currentWindow.id));
     return tabs;
   } catch (error) {
@@ -50,6 +65,11 @@ async function ClosedTabListChanged() {
       id: tab.sessionId,
       title: tab.title,
       contexts: ["browser_action"]
+    /* I was finally aware this...
+    browser_action
+    Applies when the user context-clicks your browser action. You can only add 6 items to the top-level context menu, but can add submenus. */
+    // https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/contextMenus/ACTION_MENU_TOP_LEVEL_LIMIT
+    // https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/contextMenus/create - parentId
     });
   })
 }
