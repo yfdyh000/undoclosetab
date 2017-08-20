@@ -38,7 +38,9 @@ function fillMenuIcon(menuProperty, iconUrl) {
 async function GetLastClosedTabs() {
   try {
     const currentWindow = await browser.windows.getCurrent();
-    const sessions = await browser.sessions.getRecentlyClosed();
+    const sessions = await browser.sessions.getRecentlyClosed({
+      maxResults: browser.sessions.MAX_SESSION_RESULTS // Avoid uncertainty results from bug 1392125
+    });
     let tabs = sessions.filter((s) => (s.tab && s.tab.windowId === currentWindow.id));
     return tabs;
   } catch (error) {
@@ -67,10 +69,10 @@ async function ClosedTabListChanged() {
       title: tab.title,
       contexts: ["browser_action"],
     };
-
     fillMenuIcon(menuProperty, tab.favIconUrl);
     browser.contextMenus.create(menuProperty);
-  })
+  });
+  // TODO: tabs.splice(0, 5) for an option
   let moreMenu = browser.contextMenus.create({
     id: "MoreClosedTabs",
     title: browser.i18n.getMessage("more_entries_menu"),
@@ -79,7 +81,7 @@ async function ClosedTabListChanged() {
   tabs.forEach((closedTab) => {
     let tab = closedTab.tab;
     let menuProperty = {
-      id: tab.sessionId,
+      id: `M-${tab.sessionId}`,
       title: tab.title,
       parentId: moreMenu,
       contexts: ["browser_action"]
