@@ -1,49 +1,20 @@
-const numberText = document.querySelector("#number_inputbox");
-const numberRange = document.querySelector("#number_rangebox");
-const saveButton = document.querySelector("#save_button");
-
-function numberChanged(e) {
-  if (e.target.id == 'number_inputbox') {
-    numberRange.value = e.target.value;
-  }
-  else if (e.target.id == 'number_rangebox') {
-    numberText.value = e.target.value;
-  }
-  else {
-    console.error(`Unknown changes in id:${e.target.id}`);
-  }
-}
+const input_label = document.querySelector("#checkbox_input_label");
+const checkbox_input = document.querySelector("#checkbox_input");
+const note_restrict = document.querySelector("#note_restrict");
 
 function init() {
-  document.querySelector("#number_label").textContent = browser.i18n.getMessage("menuitem_number_label");
+  input_label.textContent = browser.i18n.getMessage("checkbox_moreMenuItems");
+  note_restrict.textContent = browser.i18n.getMessage("note_restrict");
 
-  numberText.title = browser.i18n.getMessage("numberText_title");
-  numberRange.max = browser.sessions.MAX_SESSION_RESULTS;
   loadOptions();
-  numberText.addEventListener("change", numberChanged);
-  numberRange.addEventListener("change", numberChanged);
-  saveButton.innerText = browser.i18n.getMessage("saveButton_label");
-
-  document.querySelector("form").addEventListener("submit", saveOptions);
+  checkbox_input.addEventListener("change", saveOptions);
 }
 
-function showOnSaveButton(message, cleanDelay = 0) {
-  const defaultLabel = browser.i18n.getMessage("saveButton_label");
-  saveButton.innerText = message;
-  if (cleanDelay > 0)
-    setTimeout(() => { showOnSaveButton(defaultLabel); }, cleanDelay);
-}
-
-function saveOptions(e) {
-  e.preventDefault();
+function saveOptions() {
   browser.storage.local.set({
-    showNumber: numberText.value
+    moreMenuItems: !!checkbox_input.checked
   }).then(() => {
-    const message = browser.i18n.getMessage("saveButton_saved_label");
-    showOnSaveButton(message, 1500);
   }, error => {
-    const message = browser.i18n.getMessage("saveButton_error_label");
-    showOnSaveButton(message, 2000);
     console.error(error);
   }
   );
@@ -51,11 +22,10 @@ function saveOptions(e) {
 
 function loadOptions() {
   function setCurrentOptions(result) {
-    numberText.value = result.showNumber || 6;
-    numberRange.value = result.showNumber || 6;
+    checkbox_input.checked = !!result.moreMenuItems;
   }
 
-  browser.storage.local.get("showNumber").then(setCurrentOptions, error => {
+  browser.storage.local.get("moreMenuItems").then(setCurrentOptions, error => {
     console.log(error);
   });
 }

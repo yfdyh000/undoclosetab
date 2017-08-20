@@ -20,14 +20,11 @@
 // Function to do all this "Promise" stuff required by the WebExtensions API.
 // Will finally call the supplied callback with a list of closed tabs.
 
-function getCurrentNumberOption() {
-  browser.storage.local.get("showNumber").then(options => {
-    let num = parseInt(options.showNumber);
-    if (num > 0)
-      return num;
+function isShowMoreMenuItems() {
+  browser.storage.local.get("moreMenuItems").then(options => {
+    return !!options.moreMenuItems;
   }, error => {
-    //console.warn(error) // unset or error
-    return 6;
+    console.error(error)
   });
 }
 
@@ -35,9 +32,7 @@ function getCurrentNumberOption() {
 async function GetLastClosedTabs() {
   try {
     const currentWindow = await browser.windows.getCurrent();
-    const sessions = await browser.sessions.getRecentlyClosed({
-      maxResults: getCurrentNumberOption()
-    });
+    const sessions = await browser.sessions.getRecentlyClosed();
     let tabs = sessions.filter((s) => (s.tab && s.tab.windowId === currentWindow.id));
     return tabs;
   } catch (error) {
@@ -65,7 +60,9 @@ async function ClosedTabListChanged() {
       id: tab.sessionId,
       title: tab.title,
       contexts: ["browser_action"]
-    /* I was finally aware this...
+    // TODO:
+    // TODO: Restores the specified number of tabs。prom 弹出询问数量。
+    /*
     browser_action
     Applies when the user context-clicks your browser action. You can only add 6 items to the top-level context menu, but can add submenus. */
     // https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/contextMenus/ACTION_MENU_TOP_LEVEL_LIMIT
@@ -88,3 +85,14 @@ browser.windows.onFocusChanged.addListener(ClosedTabListChanged);
 ClosedTabListChanged();
 
 browser.contextMenus.onClicked.addListener(ContextMenuClicked);
+
+browser.runtime.onInstalled.addListener((details) => {
+  if (details.reason === "install") { // Initialize preferences
+    browser.storage.local.set({
+      moreMenuItems: false
+    }).then(() => {
+    }, error => {
+      console.error(error);
+    })
+  }
+})

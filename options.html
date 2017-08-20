@@ -5,10 +5,9 @@
   </head>
   <body>
     <form>
-        <label for="number" id="number_label">Number of shown on closed tabs menu:</label><br>
-        <input type="text" id="number_inputbox" value="6" style="width: 2em">
-        <input type="range" for="number_inputbox" id="number_rangebox" defaultvalue="6" autofocus="autofocus" min="1" step ="1">
-        <button id="save_button" type="submit">Save</button>
+        <input type="checkbox" id="checkbox_input">
+        <label for="checkbox_input" id="checkbox_input_label">More items (in sub-menus)</label>
+        <br><p id="note_restrict">Due to browser restrictions, the top-level menus cannot exceed 6 items.</p>
     </form>
     <script src="options.js"></script>
   </body>
