@@ -76,6 +76,7 @@ async function ClosedTabListChanged() {
   2. restore for given number; restore all shown?
   3. items serial number for an pref. Customizable format?
   */
+  if (tabs.length === 0) return; // no needed for more menu
   let moreMenu = browser.contextMenus.create({
     id: "MoreClosedTabs",
     title: browser.i18n.getMessage("more_entries_menu"),
