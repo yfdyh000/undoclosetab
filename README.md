@@ -6,4 +6,4 @@ A fork of [Undo Close Tab](https://addons.mozilla.org/firefox/addon/undoclosetab
 
 Hacking: Do a [temporary install](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Temporary_Installation_in_Firefox).
 
-Building: `web-ext build` or zip pack it.
+Building: `npm run build`, `yarn build or zip pack it.

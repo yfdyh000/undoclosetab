@@ -6,7 +6,7 @@
     "web-ext": "^2.0.0"
   },
   "scripts": {
-    "build": "web-ext build",
+    "build": "web-ext build --ignore-files package.json",
     "lint": "eslint . && web-ext lint",
     "test": "npm run lint"
   },
