@@ -17,6 +17,22 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+// menu icon support since Firefox 56 [bug 1321544]. In Firefox 54, this will lead to an error: TypeError: item is undefined  ext-contextMenus.js:127:1 and the menu display stopped.
+function fillMenuIcon(menuProperty, iconUrl) {
+  async function isBrowserSupportMenuIcon() {
+    const bInfo = await browser.runtime.getBrowserInfo();
+    return bInfo.vendor === "Mozilla" && bInfo.version >= "56.0";
+  }
+
+  if (isBrowserSupportMenuIcon() && iconUrl) {
+    return menuProperty.icons = {
+      18: iconUrl
+    }
+  } else {
+    return menuProperty
+  }
+}
+
 // Function to do all this "Promise" stuff required by the WebExtensions API.
 // Will finally call the supplied callback with a list of closed tabs.
 async function GetLastClosedTabs() {
@@ -46,12 +62,15 @@ async function ClosedTabListChanged() {
   const tabs = await GetLastClosedTabs();
   tabs.splice(0, 5).forEach((closedTab) => { // top-level menu cannot exceed 6 items.
     let tab = closedTab.tab; // stripping "lastModified"
-    browser.contextMenus.create({
+    let menuProperty = {
       id: tab.sessionId,
       title: tab.title,
-      contexts: ["browser_action"]
-    });
-  });
+      contexts: ["browser_action"],
+    };
+
+    fillMenuIcon(menuProperty, tab.favIconUrl);
+    browser.contextMenus.create(menuProperty);
+  })
   let moreMenu = browser.contextMenus.create({
     id: "MoreClosedTabs",
     title: browser.i18n.getMessage("more_entries_menu"),
@@ -59,12 +78,14 @@ async function ClosedTabListChanged() {
   });
   tabs.forEach((closedTab) => {
     let tab = closedTab.tab;
-    browser.contextMenus.create({
+    let menuProperty = {
       id: tab.sessionId,
       title: tab.title,
       parentId: moreMenu,
       contexts: ["browser_action"]
-    });
+    };
+    fillMenuIcon(menuProperty, tab.favIconUrl);
+    browser.contextMenus.create(menuProperty);
   });
 }
 
