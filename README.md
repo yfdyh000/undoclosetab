@@ -1,10 +1,8 @@
-Undo Close Tab
+[![Mozilla Add-on](https://img.shields.io/amo/d/undoclosetabex.svg)](https://addons.mozilla.org/firefox/addon/undoclosetabex/)
+[![Travis](https://img.shields.io/travis/YFdyh000/undoclosetab.svg)]()
+Undo Close Tab Ex
 ====================
-
-Main repository: https://github.com/M-Reimer/undoclosetab.
-
-AMO: https://addons.mozilla.org/en-US/firefox/addon/undoclosetabbutton/
 
 Hacking: Do a [temporary install](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Temporary_Installation_in_Firefox).
 
-Building: mak[e](https://www.gnu.org/software/make/) xpi
+Building: `web-ext build`
