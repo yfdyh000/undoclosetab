@@ -18,19 +18,18 @@
 */
 
 // menu icon support since Firefox 56 [bug 1321544]. In Firefox 54, this will lead to an error: TypeError: item is undefined  ext-contextMenus.js:127:1 and the menu display stopped.
-function fillMenuIcon(menuProperty, iconUrl) {
-  async function isBrowserSupportMenuIcon() {
-    const bInfo = await browser.runtime.getBrowserInfo();
-    return bInfo.vendor === "Mozilla" && bInfo.version >= "56.0";
-  }
-
-  if (isBrowserSupportMenuIcon() && iconUrl) {
-    return menuProperty.icons = {
+let isBrowserSupportMenuIcon
+(async () => {
+  const bInfo = await browser.runtime.getBrowserInfo();
+  return bInfo.vendor === "Mozilla" && bInfo.version >= "56.0";
+})().then((is) => isBrowserSupportMenuIcon = is); // TODO: what is better practice?
+async function fillMenuIcon(menuProperty, iconUrl) {
+  if (isBrowserSupportMenuIcon && iconUrl) {
+     menuProperty.icons = {
       18: iconUrl
     }
-  } else {
-    return menuProperty
   }
+  return menuProperty;
 }
 
 // Function to do all this "Promise" stuff required by the WebExtensions API.
@@ -65,7 +64,7 @@ async function ClosedTabListChanged() {
   tabs.splice(0, 5).forEach((closedTab) => { // top-level menu cannot exceed 6 items, more menus will be ignored.
     let tab = closedTab.tab; // stripping "lastModified"
     let menuProperty = {
-      id: tab.sessionId,
+      id: `${tab.sessionId}`,
       title: tab.title,
       contexts: ["browser_action"],
     };
@@ -85,7 +84,7 @@ async function ClosedTabListChanged() {
   tabs.forEach((closedTab) => {
     let tab = closedTab.tab;
     let menuProperty = {
-      id: `M-${tab.sessionId}`,
+      id: `closedTab-more-${tab.sessionId}`, // Set prefix to allow repetition for pref
       title: tab.title,
       parentId: moreMenu,
       contexts: ["browser_action"]
@@ -98,7 +97,7 @@ async function ClosedTabListChanged() {
 // Fired if one of our context menu entries is clicked.
 // Restores the tab, referenced by this context menu entry.
 function ContextMenuClicked(aInfo) {
-  browser.sessions.restore(aInfo.menuItemId);
+  browser.sessions.restore(aInfo.menuItemId.match(/\d+/).toString());
 }
 
 // Register event listeners
