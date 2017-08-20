@@ -60,7 +60,7 @@ async function ToolbarButtonClicked() {
 async function ClosedTabListChanged() {
   await browser.contextMenus.removeAll();
   const tabs = await GetLastClosedTabs();
-  tabs.splice(0, 5).forEach((closedTab) => { // top-level menu cannot exceed 6 items.
+  tabs.slice(0, 5).forEach((closedTab) => { // top-level menu cannot exceed 6 items, more menus will be ignored.
     let tab = closedTab.tab; // stripping "lastModified"
     let menuProperty = {
       id: tab.sessionId,
