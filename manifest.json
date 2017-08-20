@@ -8,8 +8,7 @@
   "applications": {
     "gecko": {
       "id": "UndoCloseTabEx@firefox.addon",
-      "strict_min_version": "52.0"
-    }
+      "strict_min_version": "53.0"    }
   },
 
   "icons": {
