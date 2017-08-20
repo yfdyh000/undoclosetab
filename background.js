@@ -62,7 +62,7 @@ async function ToolbarButtonClicked() {
 async function ClosedTabListChanged() {
   await browser.contextMenus.removeAll();
   const tabs = await GetLastClosedTabs();
-  tabs.slice(0, 5).forEach((closedTab) => { // top-level menu cannot exceed 6 items, more menus will be ignored.
+  tabs.splice(0, 5).forEach((closedTab) => { // top-level menu cannot exceed 6 items, more menus will be ignored.
     let tab = closedTab.tab; // stripping "lastModified"
     let menuProperty = {
       id: tab.sessionId,
@@ -72,7 +72,11 @@ async function ClosedTabListChanged() {
     fillMenuIcon(menuProperty, tab.favIconUrl);
     browser.contextMenus.create(menuProperty);
   });
-  // TODO: tabs.splice(0, 5) for an option
+  /* TODO features:
+  1. tabs.splice/slice(0, 5) for an pref? slice is keep Array.
+  2. restore for given number; restore all shown?
+  3. items serial number for an pref. Customizable format?
+  */
   let moreMenu = browser.contextMenus.create({
     id: "MoreClosedTabs",
     title: browser.i18n.getMessage("more_entries_menu"),
