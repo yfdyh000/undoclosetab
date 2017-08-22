@@ -22,7 +22,7 @@ let isBrowserSupportMenuIcon
 (async () => {
   const bInfo = await browser.runtime.getBrowserInfo();
   return bInfo.vendor === "Mozilla" && bInfo.version >= "56.0";
-})().then((is) => isBrowserSupportMenuIcon = is); // TODO: what is better practice?
+})().then((is) => isBrowserSupportMenuIcon = is); // TODO: what is better practice? probably try catch.
 async function fillMenuIcon(menuProperty, iconUrl) {
   if (isBrowserSupportMenuIcon && iconUrl) {
      menuProperty.icons = {
@@ -38,7 +38,7 @@ async function GetLastClosedTabs() {
   try {
     const currentWindow = await browser.windows.getCurrent();
     const sessions = await browser.sessions.getRecentlyClosed({
-      maxResults: browser.sessions.MAX_SESSION_RESULTS // Avoid uncertainty results from bug 1392125
+      //maxResults: browser.sessions.MAX_SESSION_RESULTS // Avoid uncertainty results from bug 1392125
     });
     let tabs = sessions.filter((s) => (s.tab && s.tab.windowId === currentWindow.id));
     return tabs;
@@ -56,43 +56,56 @@ async function ToolbarButtonClicked() {
     await browser.sessions.restore(tabs[0].sessionId);
 }
 
+async function initMenus() {
+  await browser.contextMenus.removeAll();
+  const tabs = await GetLastClosedTabs();
+  const _tabs = await GetLastClosedTabs(); // TODO: rewrite code
+  function initActionBasicMenus(tabs) {
+    tabs.splice(0, 5).forEach((closedTab) => { // top-level menu cannot exceed 6 items, more menus will be ignored.
+      let tab = closedTab.tab; // stripping "lastModified"
+      let menuProperty = {
+        id: `Basic-${tab.sessionId}`,
+        title: tab.title,
+        contexts: ["browser_action"]
+      };
+      fillMenuIcon(menuProperty, tab.favIconUrl);
+      browser.contextMenus.create(menuProperty);
+    });
+  }
+  initActionBasicMenus(tabs)
+  /* TODO features:
+  1. tabs.splice/slice(0, 5) for an pref? slice is keep Array.
+  2. restore for given number with prompt on page; restore all shown?
+  3. items serial number for an pref. Customizable format?
+  4. pref for one clickable menu.
+  5. pref for number of menu items and hide menus.
+  */
+  function initSubMenus(more = false, tabs) {
+    let moreMenu = browser.contextMenus.create({
+      id: more ? "MoreClosedTabs" : "ClosedTabs",
+      title: browser.i18n.getMessage(more ? "more_entries_menu" : "menu_label"),
+      contexts: more ? ["browser_action"] : ["page", "tab"]
+    });
+    tabs.forEach((closedTab) => {
+      let tab = closedTab.tab;
+      let menuProperty = {
+        id: (more ? "closedTab-more" : "closedTab-other") + tab.sessionId,
+        title: tab.title,
+        parentId: moreMenu,
+        contexts: more ? ["browser_action"] : ["page", "tab"]
+      };
+      fillMenuIcon(menuProperty, tab.favIconUrl);
+      browser.contextMenus.create(menuProperty);
+    });
+  }
+  if (tabs.length > 0) initSubMenus(true, tabs); // Execute only if more menus is needed
+  initSubMenus(false, _tabs);
+}
+
 // Fired if the list of closed tabs has changed.
 // Updates the context menu entries with the list of last closed tabs.
 async function ClosedTabListChanged() {
-  await browser.contextMenus.removeAll();
-  const tabs = await GetLastClosedTabs();
-  tabs.splice(0, 5).forEach((closedTab) => { // top-level menu cannot exceed 6 items, more menus will be ignored.
-    let tab = closedTab.tab; // stripping "lastModified"
-    let menuProperty = {
-      id: `${tab.sessionId}`,
-      title: tab.title,
-      contexts: ["browser_action"],
-    };
-    fillMenuIcon(menuProperty, tab.favIconUrl);
-    browser.contextMenus.create(menuProperty);
-  });
-  /* TODO features:
-  1. tabs.splice/slice(0, 5) for an pref? slice is keep Array.
-  2. restore for given number; restore all shown?
-  3. items serial number for an pref. Customizable format?
-  */
-  if (tabs.length === 0) return; // no needed for more menu
-  let moreMenu = browser.contextMenus.create({
-    id: "MoreClosedTabs",
-    title: browser.i18n.getMessage("more_entries_menu"),
-    contexts: ["browser_action"]
-  });
-  tabs.forEach((closedTab) => {
-    let tab = closedTab.tab;
-    let menuProperty = {
-      id: `closedTab-more-${tab.sessionId}`, // Set prefix to allow repetition for pref
-      title: tab.title,
-      parentId: moreMenu,
-      contexts: ["browser_action"]
-    };
-    fillMenuIcon(menuProperty, tab.favIconUrl);
-    browser.contextMenus.create(menuProperty);
-  });
+  await initMenus()
 }
 
 // Fired if one of our context menu entries is clicked.
@@ -103,9 +116,8 @@ function ContextMenuClicked(aInfo) {
 
 // Register event listeners
 browser.browserAction.onClicked.addListener(ToolbarButtonClicked);
+browser.contextMenus.onClicked.addListener(ContextMenuClicked);
 
 browser.sessions.onChanged.addListener(ClosedTabListChanged);
 browser.windows.onFocusChanged.addListener(ClosedTabListChanged);
 ClosedTabListChanged();
-
-browser.contextMenus.onClicked.addListener(ContextMenuClicked);

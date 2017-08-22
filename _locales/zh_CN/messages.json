@@ -11,5 +11,9 @@
   "more_entries_menu": {
     "message": "* 更多项",
     "description": "Last menu on Context menus of the browser action, as the top-level menu cannot exceed 6 items."
+  },
+  "menu_label": {
+    "message": "找回已关闭的标签页",
+    "description": "Menu label on Context menus of the browser tabs and page."
   }
 }

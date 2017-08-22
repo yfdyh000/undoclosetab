@@ -11,5 +11,9 @@
   "more_entries_menu": {
     "message": "* More entries",
     "description": "Last menu on Context menus of the browser action, as the top-level menu cannot exceed 6 items."
+  },
+  "menu_label": {
+    "message": "Undo Close Tab",
+    "description": "Menu label on Context menus of the browser tabs and page."
   }
 }
